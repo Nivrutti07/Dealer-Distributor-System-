@@ -1,390 +1,870 @@
-import React from 'react';
+import { useEffect, useState } from "react";
 
-// ── Inline styles ─────────────────────────────────────────────────────────────
-const S = {
-  hero: {
-    padding: '80px 48px 0',
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '48px',
-    alignItems: 'center',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    minHeight: 'calc(100vh - 64px)',
-  },
-  pill: {
-    display: 'inline-flex', alignItems: 'center', gap: '8px',
-    padding: '5px 12px', borderRadius: '100px',
-    border: '1px solid #fed7aa', background: '#fff4ed',
-    fontSize: '0.78rem', fontWeight: 500, color: '#c2410c', marginBottom: '24px',
-  },
-  pillDot: {
-    width: 6, height: 6, background: '#f97316', borderRadius: '50%',
-    animation: 'blink 2s ease-in-out infinite',
-  },
-  h1: {
-    fontFamily: 'Syne, sans-serif', fontSize: 'clamp(2rem, 4vw, 3.25rem)',
-    fontWeight: 800, lineHeight: 1.08, letterSpacing: '-0.03em',
-    marginBottom: '20px', color: 'var(--ink)',
-  },
-  heroP: {
-    fontSize: '1rem', color: 'var(--muted)', lineHeight: 1.75,
-    maxWidth: '480px', marginBottom: '32px', fontWeight: 300,
-  },
-  heroActions: { display: 'flex', gap: '12px', marginBottom: '40px' },
-  btnPrimary: {
-    padding: '12px 24px', borderRadius: '10px', border: 'none',
-    background: '#f97316', color: '#fff', fontFamily: 'DM Sans, sans-serif',
-    fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '8px',
-  },
-  btnOutline: {
-    padding: '12px 24px', borderRadius: '10px',
-    border: '1px solid var(--line)', background: 'none', color: 'var(--ink)',
-    fontFamily: 'DM Sans, sans-serif', fontSize: '0.9rem', cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '8px',
-  },
-  heroDivider: { border: 'none', borderTop: '1px solid var(--line)', marginBottom: '28px' },
-  heroStats: { display: 'flex', gap: '40px' },
-  statN: { fontFamily: 'Syne, sans-serif', fontSize: '1.6rem', fontWeight: 800, color: '#f97316' },
-  statL: { fontSize: '0.78rem', color: 'var(--muted)', marginTop: 2 },
+const GLOBAL_STYLES = `
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0a1628;
+  --navy2:#0f2040;
+  --orange:#f97316;
+  --orange2:#fb923c;
+  --steel:#1e3a5f;
+  --slate:#94a3b8;
+  --white:#f8fafc;
+  --card:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);
+}
+html,body,#root{height:100%;min-height:100vh;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--navy);
+  color:var(--white);
+  overflow-x:hidden;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+`;
 
-  dashWrap: {
-    background: '#fff', border: '1px solid var(--line)',
-    borderRadius: '16px', overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  },
-  dashTitlebar: {
-    padding: '12px 16px', borderBottom: '1px solid var(--line)',
-    display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface)',
-  },
-  dashBody: { padding: '16px' },
-  dashRow: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '10px 12px', borderRadius: '8px',
-    border: '1px solid var(--line)', marginBottom: '8px',
-  },
-  dId:   { fontSize: '0.7rem', color: 'var(--muted)' },
-  dName: { fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink)', marginTop: 1 },
-  dAmt:  { fontSize: '0.82rem', fontWeight: 600, color: '#f97316' },
-
-  strip: {
-    borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)',
-    padding: '18px 48px', background: 'var(--surface)', marginTop: '48px',
-  },
-  stripInner: {
-    maxWidth: '1200px', margin: '0 auto',
-    display: 'flex', alignItems: 'center', gap: '24px',
-  },
-  stripLabel: { fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' },
-  stripTags:  { display: 'flex', gap: '8px', flexWrap: 'wrap' },
-  tag: {
-    padding: '4px 12px', borderRadius: '100px',
-    border: '1px solid var(--line)', fontSize: '0.78rem',
-    color: 'var(--muted)', background: '#fff',
-  },
-
-  section: { padding: '80px 48px', maxWidth: '1200px', margin: '0 auto' },
-  secLabel: {
-    fontSize: '0.72rem', fontWeight: 600, color: '#f97316',
-    letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '8px',
-  },
-  secTitle: {
-    fontFamily: 'Syne, sans-serif', fontSize: '2rem', fontWeight: 800,
-    lineHeight: 1.2, color: 'var(--ink)', marginBottom: '10px',
-  },
-  secSub: {
-    fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.7,
-    maxWidth: '480px', marginBottom: '40px',
-  },
-
-  portalGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  portalCard: { border: '1px solid var(--line)', borderRadius: '14px', padding: '28px' },
-  portalCardFeatured: {
-    border: '1px solid #f97316', borderRadius: '14px', padding: '28px', background: '#fff4ed',
-  },
-  pIcon: {
-    width: 44, height: 44, borderRadius: '10px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '1.2rem', marginBottom: '16px',
-    border: '1px solid var(--line)', background: '#fff',
-  },
-  pTitle: {
-    fontFamily: 'Syne, sans-serif', fontSize: '1.1rem', fontWeight: 800,
-    marginBottom: '6px', color: 'var(--ink)',
-  },
-  pDesc: { fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.7, marginBottom: '18px' },
-  pFeats: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '20px' },
-  pFeatLi: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--muted)' },
-  checkCircle: {
-    width: 16, height: 16, borderRadius: '50%', background: '#f97316',
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '9px', color: '#fff', fontWeight: 700, flexShrink: 0,
-  },
-  pBtnFeatured: {
-    padding: '9px 18px', borderRadius: '8px', border: 'none',
-    background: '#f97316', color: '#fff', fontFamily: 'DM Sans, sans-serif',
-    fontSize: '0.83rem', fontWeight: 500, cursor: 'pointer',
-  },
-  pBtnDefault: {
-    padding: '9px 18px', borderRadius: '8px', border: '1px solid var(--line)',
-    background: '#fff', color: 'var(--ink)', fontFamily: 'DM Sans, sans-serif',
-    fontSize: '0.83rem', fontWeight: 500, cursor: 'pointer',
-  },
-
-  featuresSection: { padding: '0 48px 80px', maxWidth: '1200px', margin: '0 auto' },
-  featGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' },
-  featCard: { padding: '22px', border: '1px solid var(--line)', borderRadius: '12px' },
-  featIco: {
-    width: 36, height: 36, borderRadius: '8px', background: 'var(--surface)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '1rem', marginBottom: '12px', border: '1px solid var(--line)',
-  },
-  featT: { fontSize: '0.88rem', fontWeight: 500, color: 'var(--ink)', marginBottom: '4px' },
-  featD: { fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.6 },
-
-  ctaWrap: { padding: '0 48px 80px', maxWidth: '1200px', margin: '0 auto' },
-  cta: {
-    border: '1px solid var(--ink)', borderRadius: '16px', padding: '56px 48px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    gap: '32px', background: 'var(--ink)',
-  },
-  ctaT: {
-    fontFamily: 'Syne, sans-serif', fontSize: '1.7rem', fontWeight: 800,
-    color: '#fff', marginBottom: '8px', lineHeight: 1.2,
-  },
-  ctaD:     { fontSize: '0.92rem', color: '#9ca3af', lineHeight: 1.6 },
-  ctaActions: { display: 'flex', gap: '10px', flexShrink: 0 },
-  btnCtaP: {
-    padding: '12px 22px', borderRadius: '10px', border: 'none',
-    background: '#f97316', color: '#fff', fontFamily: 'DM Sans, sans-serif',
-    fontSize: '0.88rem', fontWeight: 500, cursor: 'pointer',
-  },
-  btnCtaS: {
-    padding: '12px 22px', borderRadius: '10px',
-    border: '1px solid rgba(255,255,255,0.15)',
-    background: 'none', color: '#fff', fontFamily: 'DM Sans, sans-serif',
-    fontSize: '0.88rem', cursor: 'pointer',
-  },
-};
-
-// ── Status Badge ──────────────────────────────────────────────────────────────
-function Badge({ status }) {
-  const styles = {
-    Pending:  { background: '#fef9c3', color: '#854d0e' },
-    Approved: { background: '#dcfce7', color: '#15803d' },
-    Rejected: { background: '#fee2e2', color: '#b91c1c' },
-  };
+// =============================================
+// COMING SOON PAGE (for unbuilt pages)
+// =============================================
+function ComingSoon({ page, icon, desc }) {
   return (
-    <span style={{
-      fontSize: '0.68rem', fontWeight: 600, padding: '3px 10px',
-      borderRadius: '100px', ...(styles[status] || {}),
-    }}>{status}</span>
+    <div
+      style={{
+        minHeight: "calc(100vh - 68px)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 20px",
+        background:
+          "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(249,115,22,0.07) 0%, transparent 70%)",
+      }}
+    >
+      <div style={{ fontSize: "3.5rem", marginBottom: "20px" }}>{icon}</div>
+      <div
+        style={{
+          fontFamily: "Syne, sans-serif",
+          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+          fontWeight: 800,
+          marginBottom: "12px",
+          textAlign: "center",
+        }}
+      >
+        {page}
+      </div>
+      <p
+        style={{
+          color: "var(--slate)",
+          fontSize: "1rem",
+          maxWidth: "420px",
+          textAlign: "center",
+          lineHeight: 1.7,
+          marginBottom: "28px",
+        }}
+      >
+        {desc}
+      </p>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "12px 24px",
+          borderRadius: "40px",
+          border: "1px dashed rgba(249,115,22,0.4)",
+          background: "rgba(249,115,22,0.07)",
+          color: "var(--orange2)",
+          fontWeight: 600,
+          fontSize: "0.88rem",
+        }}
+      >
+        Page Under Construction
+      </div>
+    </div>
   );
 }
 
-// ── HOME PAGE ─────────────────────────────────────────────────────────────────
-function HomePage({ navigate }) {
-
-  const orders = [
-    { id: '#ORD-0041', name: 'CPVC Pipe 25mm × 50',  status: 'Pending',  amt: '₹8,400' },
-    { id: '#ORD-0040', name: 'Ball Valve 1″ × 30',    status: 'Approved', amt: '₹3,200' },
-    { id: '#ORD-0039', name: 'GI Elbow 90° × 100',    status: 'Approved', amt: '₹5,750' },
-    { id: '#ORD-0038', name: 'PVC Fitting Set × 20',  status: 'Rejected', amt: '₹1,900' },
-  ];
-
-  const barHeights = [40, 65, 52, 82, 70, 93, 75];
-
-  const portals = [
-    {
-      icon: '🏭', title: 'Distributor Admin', featured: true,
-      desc: 'Full control over catalog, brands, dealer accounts and orders.',
-      feats: ['Add & manage brands and products', 'Approve or reject dealer orders', 'View analytics & reports', 'Manage dealer registrations'],
-      btn: 'Go to Admin Panel', page: 'admin',
-    },
-    {
-      icon: '🏪', title: 'Dealer User', featured: false,
-      desc: 'Browse catalog, submit order enquiries and track status digitally.',
-      feats: ['Register & login securely', 'Browse product catalog by brand', 'Place order & enquiry requests', 'Track order status in real-time'],
-      btn: 'Dealer Login', page: 'login',
-    },
-  ];
-
-  const features = [
-    ['📦', 'Product Catalog',   'Organized by brand & category for easy browsing.'],
-    ['🛒', 'Order Management',  'Digital orders with Pending / Approved / Rejected status.'],
-    ['🔐', 'Secure Auth',       'Dealer registration and role-based admin access.'],
-    ['📊', 'Admin Dashboard',   'Stats, order counts and dealer activity at a glance.'],
-    ['🏷️', 'Brand Management', 'Add brands, map products and keep catalog tidy.'],
-    ['📱', 'Responsive UI',     'Works on desktop, tablet, and mobile devices.'],
-  ];
-
+// =============================================
+// HOME PAGE
+// =============================================
+function HomePage({ navigate, message }) {
   return (
     <div>
+      {/* HERO */}
+      <section
+        style={{
+          minHeight: "calc(100vh - 68px)",
+          display: "flex",
+          alignItems: "center",
+          padding: "80px 5% 60px",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Background glow */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse 70% 60% at 65% 40%, rgba(249,115,22,0.12) 0%, transparent 70%)",
+          }}
+        />
+        {/* Grid overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%)",
+            maskImage:
+              "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%)",
+          }}
+        />
 
-      {/* ── HERO ── */}
-      <div style={S.hero}>
-
-        {/* Left: Text */}
-        <div>
-          <div style={S.pill}>
-            <span style={S.pillDot} />
-            Distributor &amp; Dealer Portal
+        <div style={{ position: "relative", zIndex: 2, maxWidth: "640px" }}>
+          {/* Badge */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 14px",
+              borderRadius: "20px",
+              border: "1px solid rgba(249,115,22,0.35)",
+              background: "rgba(249,115,22,0.1)",
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              color: "var(--orange2)",
+              marginBottom: "28px",
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                background: "var(--orange)",
+                borderRadius: "50%",
+                display: "inline-block",
+                animation: "pulse 2s infinite",
+              }}
+            />
+            Distributor and Dealer Portal
           </div>
 
-          <h1 style={S.h1}>
-            Manage orders.<br />
-            <span style={{ color: '#f97316' }}>Grow faster.</span><br />
-            Zero chaos.
+          {/* Heading */}
+          <h1
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              marginBottom: "20px",
+            }}
+          >
+            Manage Orders.<br />
+            <span style={{ color: "var(--orange)" }}>Grow Faster.</span>
+            <br />
+            Zero Chaos.
           </h1>
 
-          <p style={S.heroP}>
-            Replace WhatsApp and phone-based order management with a powerful
+          <p
+            style={{
+              fontSize: "1.05rem",
+              color: "var(--slate)",
+              lineHeight: 1.7,
+              marginBottom: "36px",
+              maxWidth: "500px",
+            }}
+          >
+            Replace WhatsApp or phone-based order management with a powerful
             digital portal for plumbing and construction material distributors.
           </p>
 
-          <div style={S.heroActions}>
-            <button style={S.btnPrimary} onClick={() => navigate('register')}>
-              🚀 Dealer Register
-            </button>
-            <button style={S.btnOutline} onClick={() => navigate('products')}>
-              📦 View Products
-            </button>
-          </div>
-
-          <hr style={S.heroDivider} />
-
-          <div style={S.heroStats}>
-            {[['200+','Dealers Registered'],['15K+','Orders Processed'],['98%','Fulfilment Rate']].map(([n, l]) => (
-              <div key={l}>
-                <div style={S.statN}>{n}</div>
-                <div style={S.statL}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: Dashboard mock */}
-        <div style={S.dashWrap}>
-          <div style={S.dashTitlebar}>
-            {['#ef4444','#f59e0b','#22c55e'].map(c => (
-              <div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }} />
-            ))}
-            <span style={{ fontSize:'0.75rem', color:'#9ca3af', marginLeft:'8px' }}>
-              Order Dashboard
-            </span>
-          </div>
-
-          <div style={S.dashBody}>
-            {orders.map((o, i) => (
-              <div key={o.id} style={{ ...S.dashRow, marginBottom: i === orders.length - 1 ? 0 : '8px' }}>
-                <div>
-                  <div style={S.dId}>{o.id}</div>
-                  <div style={S.dName}>{o.name}</div>
-                </div>
-                <Badge status={o.status} />
-                <span style={S.dAmt}>{o.amt}</span>
-              </div>
-            ))}
-
-            {/* Mini bar chart */}
-            <div style={{ marginTop:'14px', paddingTop:'14px', borderTop:'1px solid var(--line)' }}>
-              <div style={{ fontSize:'0.7rem', color:'var(--muted)', marginBottom:'8px' }}>
-                Weekly order volume
-              </div>
-              <div style={{ display:'flex', alignItems:'flex-end', gap:'4px', height:'44px' }}>
-                {barHeights.map((h, i) => (
-                  <div key={i} style={{
-                    flex:1, background:'#fed7aa', borderRadius:'3px 3px 0 0', position:'relative',
-                  }}>
-                    <div style={{
-                      position:'absolute', bottom:0, left:0, right:0,
-                      height:`${h}%`, background:'#f97316', borderRadius:'3px 3px 0 0',
-                    }} />
-                  </div>
-                ))}
-              </div>
+          {message ? (
+            <div
+              style={{
+                marginBottom: "18px",
+                fontSize: "0.85rem",
+                color: "var(--slate)",
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                padding: "10px 14px",
+                borderRadius: 8,
+                maxWidth: 520,
+              }}
+            >
+              {message}
             </div>
-          </div>
-        </div>
-      </div>
+          ) : null}
 
-      {/* ── CATEGORY STRIP ── */}
-      <div style={S.strip}>
-        <div style={S.stripInner}>
-          <span style={S.stripLabel}>Built for</span>
-          <div style={S.stripTags}>
-            {['Pipes & Fittings','Valves','Sanitary Ware','Plumbing Tools','Construction Materials'].map(t => (
-              <span key={t} style={S.tag}>{t}</span>
+          {/* CTA Buttons */}
+          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+            <button
+              onClick={() => navigate("register")}
+              style={{
+                padding: "13px 28px",
+                borderRadius: "8px",
+                background: "var(--orange)",
+                color: "#fff",
+                fontFamily: "DM Sans, sans-serif",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 4px 24px rgba(249,115,22,0.35)",
+              }}
+            >
+              Dealer Register
+            </button>
+
+            <button
+              onClick={() => navigate("products")}
+              style={{
+                padding: "13px 28px",
+                borderRadius: "8px",
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                color: "var(--white)",
+                fontFamily: "DM Sans, sans-serif",
+                fontSize: "0.95rem",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              View Products
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div
+            style={{
+              display: "flex",
+              gap: "32px",
+              marginTop: "48px",
+              paddingTop: "28px",
+              borderTop: "1px solid var(--border)",
+              flexWrap: "wrap",
+            }}
+          >
+            {[
+              ["200+", "Dealers Registered"],
+              ["15K+", "Orders Processed"],
+              ["98%", "Fulfillment Rate"],
+            ].map(([num, label]) => (
+              <div key={label}>
+                <div
+                  style={{
+                    fontFamily: "Syne, sans-serif",
+                    fontSize: "1.7rem",
+                    fontWeight: 800,
+                    color: "var(--orange)",
+                  }}
+                >
+                  {num}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.78rem",
+                    color: "var(--slate)",
+                    marginTop: 2,
+                  }}
+                >
+                  {label}
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── PORTALS ── */}
-      <div style={S.section}>
-        <div style={S.secLabel}>Portal Access</div>
-        <div style={S.secTitle}>Two portals, one platform</div>
-        <p style={S.secSub}>
-          Separate dashboards for each user — full control for distributors, simple ordering for dealers.
-        </p>
+      {/* TWO PORTALS */}
+      <section style={{ padding: "70px 5%" }}>
+        <div style={{ marginBottom: "44px" }}>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: "var(--orange)",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}
+          >
+            Portal Access
+          </div>
+          <div
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: "clamp(1.8rem,3vw,2.4rem)",
+              fontWeight: 800,
+              marginBottom: 12,
+            }}
+          >
+            Two Portals, One Platform
+          </div>
+          <p
+            style={{
+              color: "var(--slate)",
+              fontSize: "1rem",
+              maxWidth: 480,
+              lineHeight: 1.7,
+            }}
+          >
+            Separate dashboards designed for each user with full control for
+            distributors and easy ordering for dealers.
+          </p>
+        </div>
 
-        <div style={S.portalGrid}>
-          {portals.map(card => (
-            <div key={card.title} style={card.featured ? S.portalCardFeatured : S.portalCard}>
-              <div style={S.pIcon}>{card.icon}</div>
-              <div style={S.pTitle}>{card.title}</div>
-              <p style={S.pDesc}>{card.desc}</p>
-              <ul style={S.pFeats}>
-                {card.feats.map(f => (
-                  <li key={f} style={S.pFeatLi}>
-                    <span style={S.checkCircle}>✓</span>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))",
+            gap: "20px",
+          }}
+        >
+          {[
+            {
+              icon: "Admin",
+              title: "Distributor Admin",
+              desc: "Full control over catalog, brands, dealer accounts and orders.",
+              feats: [
+                "Add and manage brands and products",
+                "Approve or reject orders",
+                "View analytics and reports",
+                "Manage dealer accounts",
+              ],
+              btn: "Go to Admin Panel",
+              page: "admin",
+            },
+            {
+              icon: "Dealer",
+              title: "Dealer User",
+              desc: "Browse catalog, place order enquiries and track status digitally.",
+              feats: [
+                "Register and login securely",
+                "Browse product catalog",
+                "Place order requests",
+                "Track order status",
+              ],
+              btn: "Dealer Login",
+              page: "login",
+            },
+          ].map((card) => (
+            <div
+              key={card.title}
+              style={{
+                borderRadius: 16,
+                padding: 32,
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+              }}
+            >
+              <div style={{ fontSize: "1rem", marginBottom: 16 }}>{card.icon}</div>
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: "1.2rem",
+                  fontWeight: 700,
+                  marginBottom: 8,
+                }}
+              >
+                {card.title}
+              </div>
+              <p
+                style={{
+                  color: "var(--slate)",
+                  fontSize: "0.88rem",
+                  lineHeight: 1.7,
+                  marginBottom: 18,
+                }}
+              >
+                {card.desc}
+              </p>
+              <ul
+                style={{
+                  listStyle: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {card.feats.map((f) => (
+                  <li
+                    key={f}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: "0.83rem",
+                      color: "var(--slate)",
+                    }}
+                  >
+                    <span style={{ color: "var(--orange)", fontWeight: 700 }}>
+                      Check
+                    </span>
                     {f}
                   </li>
                 ))}
               </ul>
               <button
-                style={card.featured ? S.pBtnFeatured : S.pBtnDefault}
                 onClick={() => navigate(card.page)}
+                style={{
+                  marginTop: 24,
+                  padding: "10px 20px",
+                  borderRadius: 7,
+                  background: "rgba(249,115,22,0.12)",
+                  border: "1px solid rgba(249,115,22,0.25)",
+                  color: "var(--orange2)",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "DM Sans, sans-serif",
+                }}
               >
-                {card.btn} →
+                {card.btn} -&gt;
               </button>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── FEATURES ── */}
-      <div style={S.featuresSection}>
-        <div style={S.secLabel}>Features</div>
-        <div style={{ ...S.secTitle, marginBottom: '32px' }}>Everything you need</div>
-        <div style={S.featGrid}>
-          {features.map(([icon, title, desc]) => (
-            <div key={title} style={S.featCard}>
-              <div style={S.featIco}>{icon}</div>
-              <div style={S.featT}>{title}</div>
-              <p style={S.featD}>{desc}</p>
+      {/* FEATURES */}
+      <section style={{ padding: "0 5% 70px" }}>
+        <div style={{ marginBottom: "40px" }}>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: "var(--orange)",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}
+          >
+            Features
+          </div>
+          <div
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: "clamp(1.8rem,3vw,2.4rem)",
+              fontWeight: 800,
+            }}
+          >
+            Everything You Need
+          </div>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {[
+            ["Catalog", "Product Catalog", "Organized by brand and category."],
+            ["Orders", "Order Management", "Digital orders with status tracking."],
+            ["Secure", "Secure Auth", "Dealer registration and admin access."],
+            ["Admin", "Admin Dashboard", "Stats and dealer activity at a glance."],
+            ["Brands", "Brand Management", "Add brands and keep catalog tidy."],
+            ["Responsive", "Responsive UI", "Works on desktop, tablet, and mobile."],
+          ].map(([icon, title, desc]) => (
+            <div
+              key={title}
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 10,
+                  background: "rgba(249,115,22,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.65rem",
+                  marginBottom: 14,
+                  fontWeight: 600,
+                  color: "var(--orange2)",
+                }}
+              >
+                {icon}
+              </div>
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  marginBottom: 7,
+                }}
+              >
+                {title}
+              </div>
+              <p
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--slate)",
+                  lineHeight: 1.65,
+                }}
+              >
+                {desc}
+              </p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── CTA ── */}
-      <div style={S.ctaWrap}>
-        <div style={S.cta}>
-          <div>
-            <div style={S.ctaT}>Ready to ditch WhatsApp orders?</div>
-            <p style={S.ctaD}>Join the portal and manage every order digitally — no more missed messages.</p>
-          </div>
-          <div style={S.ctaActions}>
-            <button style={S.btnCtaP} onClick={() => navigate('register')}>🚀 Register as Dealer</button>
-            <button style={S.btnCtaS} onClick={() => navigate('contact')}>📞 Contact Distributor</button>
-          </div>
+      {/* CTA BANNER */}
+      <div
+        style={{
+          margin: "0 5% 70px",
+          background:
+            "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,32,64,0.9) 100%)",
+          border: "1px solid rgba(249,115,22,0.25)",
+          borderRadius: 20,
+          padding: "56px 5%",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: "clamp(1.7rem,3vw,2.3rem)",
+            fontWeight: 800,
+            marginBottom: 10,
+          }}
+        >
+          Ready to Ditch WhatsApp Orders?
+        </div>
+        <p style={{ color: "var(--slate)", marginBottom: 26 }}>
+          Join the portal and manage every order digitally with no missed
+          messages.
+        </p>
+        <div
+          style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}
+        >
+          <button
+            onClick={() => navigate("register")}
+            style={{
+              padding: "13px 28px",
+              borderRadius: 8,
+              background: "var(--orange)",
+              color: "#fff",
+              fontFamily: "DM Sans, sans-serif",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Register as Dealer
+          </button>
+          <button
+            onClick={() => navigate("contact")}
+            style={{
+              padding: "13px 28px",
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "var(--card)",
+              color: "var(--white)",
+              fontFamily: "DM Sans, sans-serif",
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            Contact Distributor
+          </button>
         </div>
       </div>
-
     </div>
   );
 }
 
-export default HomePage;
+// =============================================
+// NAVBAR CONFIG
+// =============================================
+const NAV_LINKS = [
+  { label: "Home", page: "home" },
+  { label: "Products", page: "products" },
+  { label: "Orders", page: "orders" },
+  { label: "Dashboard", page: "admin" },
+  { label: "About", page: "about" },
+];
+
+// Meta for "coming soon" pages
+const PAGE_META = {
+  products: {
+    icon: "Products",
+    desc: "Browse the full product catalog by brand, category and price range.",
+  },
+  orders: {
+    icon: "Orders",
+    desc: "View and manage all dealer order requests with status tracking.",
+  },
+  admin: {
+    icon: "Admin",
+    desc: "Admin dashboard showing analytics, dealer list, and order approvals.",
+  },
+  about: {
+    icon: "Info",
+    desc: "About this project built as a CSE college project.",
+  },
+  login: {
+    icon: "Login",
+    desc: "Dealer login page with secure authentication and role-based access.",
+  },
+  register: {
+    icon: "Register",
+    desc: "New dealer registration form with validation.",
+  },
+  contact: {
+    icon: "Contact",
+    desc: "Contact the distributor for support or enquiries.",
+  },
+};
+
+// =============================================
+// MAIN APP
+// =============================================
+function Home({ message }) {
+  const [page, setPage] = useState("home");
+
+  useEffect(() => {
+    const id = "flowtrade-fonts";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
+
+  const navigate = (p) => {
+    setPage(p);
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const meta = PAGE_META[page];
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <style>{GLOBAL_STYLES}</style>
+      {/* NAVBAR */}
+      <nav
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 5%",
+          height: 68,
+          background: "rgba(10,22,40,0.92)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        {/* Logo */}
+        <div
+          onClick={() => navigate("home")}
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontWeight: 800,
+            fontSize: "1.25rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer",
+          }}
+        >
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              background: "var(--orange)",
+              borderRadius: "50%",
+              display: "inline-block",
+            }}
+          />
+          FlowTrade
+        </div>
+
+        {/* Nav Links */}
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {NAV_LINKS.map((link) => (
+            <button
+              key={link.page}
+              onClick={() => navigate(link.page)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 7,
+                border: "none",
+                background:
+                  page === link.page
+                    ? "rgba(249,115,22,0.15)"
+                    : "transparent",
+                color: page === link.page ? "var(--orange2)" : "var(--slate)",
+                fontFamily: "DM Sans, sans-serif",
+                fontSize: "0.88rem",
+                fontWeight: page === link.page ? 600 : 400,
+                cursor: "pointer",
+                transition: "all .2s",
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Auth Buttons */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => navigate("login")}
+            style={{
+              padding: "8px 18px",
+              border: "1px solid var(--border)",
+              borderRadius: 6,
+              background: "none",
+              color: "var(--white)",
+              fontFamily: "DM Sans, sans-serif",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => navigate("register")}
+            style={{
+              padding: "8px 18px",
+              border: "none",
+              borderRadius: 6,
+              background: "var(--orange)",
+              color: "#fff",
+              fontFamily: "DM Sans, sans-serif",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Register
+          </button>
+        </div>
+      </nav>
+
+      {/* BREADCRUMB (not on home) */}
+      {page !== "home" && (
+        <div
+          style={{
+            padding: "10px 5%",
+            background: "rgba(255,255,255,0.02)",
+            borderBottom: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: "0.8rem",
+            color: "var(--slate)",
+          }}
+        >
+          <span
+            onClick={() => navigate("home")}
+            style={{ cursor: "pointer", color: "var(--orange2)" }}
+          >
+            Home
+          </span>
+          <span>/</span>
+          <span style={{ color: "var(--white)", textTransform: "capitalize" }}>
+            {page}
+          </span>
+        </div>
+      )}
+
+      {/* PAGE RENDER */}
+      <main style={{ flex: 1 }}>
+        {page === "home" ? (
+          <HomePage navigate={navigate} message={message} />
+        ) : (
+          <ComingSoon
+            page={page.charAt(0).toUpperCase() + page.slice(1)}
+            icon={meta?.icon || "Work"}
+            desc={meta?.desc || "This page is under development."}
+          />
+        )}
+      </main>
+
+      {/* FOOTER */}
+      <footer
+        style={{
+          borderTop: "1px solid var(--border)",
+          padding: "24px 5%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              background: "var(--orange)",
+              borderRadius: "50%",
+              display: "inline-block",
+            }}
+          />
+          FlowTrade Portal
+        </div>
+        <div style={{ display: "flex", gap: 20 }}>
+          {NAV_LINKS.map((link) => (
+            <button
+              key={link.page}
+              onClick={() => navigate(link.page)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--slate)",
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                fontFamily: "DM Sans, sans-serif",
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ color: "var(--slate)", fontSize: "0.78rem" }}>
+          Copyright 2024 FlowTrade. CSE College Project
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default Home;
