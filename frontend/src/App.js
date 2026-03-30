@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "./services/api";
+import Home from "./pages/Home";
 
 function App() {
   const [message, setMessage] = useState("");
@@ -12,8 +13,7 @@ function App() {
 
   return (
     <div>
-      <h1>Dealer Distributor Portal</h1>
-      <h2>{message}</h2>
+      <Home message={message} />
     </div>
   );
 }
