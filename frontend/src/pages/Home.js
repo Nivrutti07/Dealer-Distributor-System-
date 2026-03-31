@@ -1,813 +1,855 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { testimonials, services, initialProducts } from '../data/mockData';
+import React, { useState, useEffect, useCallback } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+
+const Link = ({ to, children, ...props }) => (
+  <a href={to} {...props}>
+    {children}
+  </a>
+);
+
+// ═══════════════════════════════════════════════════════════════
+// DATA SECTION - All mock data
+// ═══════════════════════════════════════════════════════════════
+
+const services = [
+  {
+    icon: '🚚',
+    title: 'Fast Delivery',
+    desc: 'Pan-India delivery within 3-7 business days with real-time tracking.'
+  },
+  {
+    icon: '💰',
+    title: 'Wholesale Pricing',
+    desc: 'Competitive bulk pricing for dealers and contractors with volume discounts.'
+  },
+  {
+    icon: '🛡️',
+    title: 'Quality Assured',
+    desc: 'All products are ISI marked and certified, backed by manufacturer warranty.'
+  },
+  {
+    icon: '🤝',
+    title: 'Expert Support',
+    desc: 'Dedicated sales team and technical support for product selection and installation.'
+  }
+];
+
+const featuredProducts = [
+  {
+    id: 1,
+    name: 'UPVC Pipes & Fittings',
+    category: 'Plumbing',
+    image: '🔵',
+    description: 'Durable UPVC pipes for water supply systems. Available in various sizes from 15mm to 200mm.',
+    price: 2500,
+    features: ['ISI Marked', 'Lead Free', '25 Year Warranty']
+  },
+  {
+    id: 2,
+    name: 'CPVC Pipe System',
+    category: 'Plumbing',
+    image: '🔴',
+    description: 'Hot & cold water piping system. Temperature resistant up to 90°C.',
+    price: 3200,
+    features: ['Fire Resistant', 'NSF Certified', '50 Year Life']
+  },
+  {
+    id: 3,
+    name: 'SWR Drainage System',
+    category: 'Drainage',
+    image: '⚫',
+    description: 'Soil, Waste & Rainwater drainage pipes. Chemical and corrosion resistant.',
+    price: 1800,
+    features: ['Impact Resistant', 'Weather Proof', 'Low Maintenance']
+  },
+  {
+    id: 4,
+    name: 'HDPE Pipe Coils',
+    category: 'Agriculture',
+    image: '⚪',
+    description: 'Flexible HDPE pipes for agricultural and industrial applications.',
+    price: 4500,
+    features: ['UV Resistant', 'Flexible', 'Long Lasting']
+  },
+  {
+    id: 5,
+    name: 'Column Pipes',
+    category: 'Construction',
+    image: '🟡',
+    description: 'Heavy-duty column pipes for submersible pumps and deep well applications.',
+    price: 3800,
+    features: ['High Pressure', 'Thread Type', 'ISI Approved']
+  }
+];
+
+const initialProducts = [
+  {
+    id: 1,
+    name: 'UPVC Pipes',
+    category: 'Plumbing',
+    image: '💧',
+    description: 'Premium quality UPVC pipes for residential and commercial water supply.',
+    price: 2500
+  },
+  {
+    id: 2,
+    name: 'CPVC Pipes',
+    category: 'Plumbing',
+    image: '🔥',
+    description: 'Heat resistant CPVC piping system for hot and cold water distribution.',
+    price: 3200
+  },
+  {
+    id: 3,
+    name: 'SWR Pipes',
+    category: 'Drainage',
+    image: '🚿',
+    description: 'Efficient drainage solution for soil, waste and rainwater management.',
+    price: 1800
+  }
+];
+
+const testimonials = [
+  {
+    id: 1,
+    name: 'Rajesh Kumar',
+    role: 'Contractor, Delhi',
+    initials: 'RK',
+    rating: 5,
+    text: 'Been working with Prince for over 10 years. Product quality is top-notch and delivery is always on time. Highly recommend for large construction projects.'
+  },
+  {
+    id: 2,
+    name: 'Priya Sharma',
+    role: 'Dealer, Mumbai',
+    initials: 'PS',
+    rating: 5,
+    text: 'Excellent support from the sales team. The wholesale pricing is very competitive and my customers are always satisfied with the product durability.'
+  },
+  {
+    id: 3,
+    name: 'Amit Patel',
+    role: 'Builder, Ahmedabad',
+    initials: 'AP',
+    rating: 5,
+    text: 'Prince pipes have become our go-to choice for all residential projects. The ISI certification and warranty gives confidence to our clients.'
+  },
+  {
+    id: 4,
+    name: 'Sunita Reddy',
+    role: 'Plumbing Contractor, Bangalore',
+    initials: 'SR',
+    rating: 5,
+    text: 'The technical support team is very knowledgeable. They helped us choose the right products for our commercial plumbing project.'
+  }
+];
+
+const trustedBrands = [
+  {
+    id: 1,
+    name: 'Prince',
+    logo: '👑',
+    color: '#cc1f1f',
+    tagline: "India's No.1 Piping Brand"
+  },
+  {
+    id: 2,
+    name: 'Supreme',
+    logo: '⭐',
+    color: '#0d9f6e',
+    tagline: 'Quality You Trust'
+  },
+  {
+    id: 3,
+    name: 'Finolex',
+    logo: '🔷',
+    color: '#1a6dc8',
+    tagline: 'Pipes for Life'
+  },
+  {
+    id: 4,
+    name: 'Astral',
+    logo: '💎',
+    color: '#e07b00',
+    tagline: 'Building Tomorrow'
+  },
+  {
+    id: 5,
+    name: 'Ashirvad',
+    logo: '🌟',
+    color: '#9333ea',
+    tagline: 'Trusted Nationwide'
+  }
+];
+
+const productCategories = [
+  {
+    id: 'plumbing',
+    name: 'Plumbing Materials',
+    icon: '🔧',
+    description: 'Complete range of UPVC, CPVC pipes and fittings'
+  },
+  {
+    id: 'paint',
+    name: 'Paint Materials',
+    icon: '🎨',
+    description: 'Premium quality paints and coatings'
+  },
+  {
+    id: 'construction',
+    name: 'Construction Materials',
+    icon: '🏗️',
+    description: 'Building materials for all construction needs'
+  },
+  {
+    id: 'agriculture',
+    name: 'Agriculture Materials',
+    icon: '🌾',
+    description: 'Irrigation pipes and agricultural solutions'
+  }
+];
+
+const contactInfo = {
+  phone: '+91 1800-XXX-XXXX',
+  email: 'sales@princepipes.com',
+  whatsapp: '+91 98765-43210',
+  address: 'Prince Piping Systems Pvt. Ltd., New Delhi, India',
+  hours: 'Mon–Sat, 9:00 AM – 6:00 PM IST'
+};
+
+const stats = [
+  { number: '37+', label: 'Years', icon: '🏆', color: '#e84040' },
+  { number: '5000+', label: 'Dealers', icon: '🤝', color: '#60b3ff' },
+  { number: '500+', label: 'Products', icon: '📦', color: '#4de8b0' },
+  { number: '28', label: 'States', icon: '🗺️', color: '#ffd166' }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER COMPONENTS
+// ═══════════════════════════════════════════════════════════════
 
 const SectionLabel = ({ text }) => (
-  <div style={{ display:'flex', alignItems:'center', gap:'10px', color:'#3B82F6', fontSize:'0.7rem', letterSpacing:'4px', textTransform:'uppercase', fontWeight:'700', marginBottom:'12px' }}>
-    <span style={{ display:'block', width:'26px', height:'2px', background:'#3B82F6' }} />{text}
+  <div className="flex items-center gap-2.5 text-[#cc1f1f] text-[0.7rem] tracking-[4px] uppercase font-bold mb-3">
+    <span className="block w-[26px] h-[2px] bg-[#cc1f1f]" />
+    {text}
   </div>
 );
 
-const Stars = ({ n }) => Array.from({length:n}).map((_,i) => <span key={i} style={{ color:'#f59e0b', fontSize:'0.88rem' }}>★</span>);
+const Stars = ({ n }) =>
+  Array.from({ length: n }).map((_, i) => (
+    <span key={i} className="text-[#f59e0b] text-sm">
+      ★
+    </span>
+  ));
 
-const Home = () => {
-  const slides = [
-    {
-      title: "India's Premier Piping Systems Provider",
-      subtitle: "UPVC, CPVC, SWR and HDPE Solutions",
-      description: "Delivering world-class piping solutions to contractors, builders and industries across India with uncompromising quality and reliability.",
-      button: "Become a Dealer",
-      bg: "linear-gradient(135deg,#F8FAFC 0%,#E2E8F0 100%)",
-      accentColor: "#3B82F6",
-      stats: [['37+','Years','#3B82F6'],['5000+','Dealers','#10B981'],['500+','Products','#F59E0B']]
-    },
-    {
-      title: "Trusted Since 1987",
-      subtitle: "Building India's Infrastructure",
-      description: "With state-of-the-art manufacturing and a pan-India network, we set the benchmark for piping excellence and innovation.",
-      button: "Explore Products",
-      bg: "linear-gradient(135deg,#FEF7ED 0%,#FED7AA 100%)",
-      accentColor: "#EA580C",
-      stats: [['ISO 9001','Certified','#10B981'],['5000+','Dealers','#3B82F6'],['28','States','#8B5CF6']]
-    },
-    {
-      title: "Quality You Can Trust",
-      subtitle: "ISI Marked & BIS Approved",
-      description: "High-quality, durable piping solutions with stringent quality control and comprehensive certification standards.",
-      button: "View Services",
-      bg: "linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%)",
-      accentColor: "#059669",
-      stats: [['37+','Years','#3B82F6'],['500+','Products','#F59E0B'],['ISI','Marked','#10B981']]
-    }
-  ];
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT CAROUSEL COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
-  const [currentSlide, setCurrentSlide] = useState(0);
+const ProductCarousel = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  ]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    return () => emblaApi.off('select', onSelect);
+  }, [emblaApi, onSelect]);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   return (
-  <div style={{ background:'#FFFFFF', color:'#1F2937', fontFamily:"'Inter','Segoe UI',sans-serif", overflowX:'hidden' }}>
-
-    {/* ═══ HERO ═══════════════════════════════════════════ */}
-    <div style={{ minHeight:'100vh', position:'relative', display:'flex', alignItems:'center', background: slides[currentSlide].bg, overflow:'hidden', transition: 'background 0.8s ease' }}>
-      {/* Background Pattern */}
-      <div style={{ position:'absolute', inset:0, opacity:0.03, backgroundImage:'radial-gradient(circle at 25% 25%, #000 2px, transparent 2px), radial-gradient(circle at 75% 75%, #000 2px, transparent 2px)', backgroundSize:'50px 50px', pointerEvents:'none' }} />
-
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4rem', alignItems:'center', paddingTop:'6rem' }}>
-        <div style={{ zIndex:2 }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(255,255,255,0.9)', border:'1px solid rgba(0,0,0,0.05)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'2rem', backdropFilter:'blur(10px)', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: slides[currentSlide].accentColor }} />
-            <span style={{ color:'#374151', fontSize:'0.875rem', fontWeight:'500' }}>Trusted Since 1987</span>
-          </div>
-
-          <h1 style={{ fontSize:'clamp(2.5rem,5vw,4rem)', fontWeight:'800', lineHeight:'1.1', margin:'0 0 1.5rem', color:'#1F2937', letterSpacing:'-0.025em' }}>
-            {slides[currentSlide].title.split(' ').slice(0, -1).join(' ')} <span style={{ color: slides[currentSlide].accentColor }}>{slides[currentSlide].title.split(' ').slice(-1)}</span>
-          </h1>
-
-          <p style={{ color:'#6B7280', fontSize:'1.125rem', lineHeight:'1.7', margin:'0 0 2.5rem', maxWidth:'32rem' }}>
-            {slides[currentSlide].description}
-          </p>
-
-          <div style={{ display:'flex', gap:'1rem', flexWrap:'wrap' }}>
-            <Link to="/login" style={{
-              background: slides[currentSlide].accentColor,
-              color:'#FFFFFF',
-              padding:'1rem 2rem',
-              borderRadius:'0.75rem',
-              textDecoration:'none',
-              fontWeight:'600',
-              fontSize:'1rem',
-              boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
-              transition:'all 0.2s',
-              display:'inline-flex',
-              alignItems:'center',
-              gap:'0.5rem'
-            }}>
-              {slides[currentSlide].button}
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-            <a href="#products" style={{
-              background:'rgba(255,255,255,0.9)',
-              color:'#374151',
-              padding:'1rem 2rem',
-              borderRadius:'0.75rem',
-              textDecoration:'none',
-              fontWeight:'600',
-              fontSize:'1rem',
-              border:'1px solid rgba(0,0,0,0.05)',
-              backdropFilter:'blur(10px)',
-              boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)',
-              transition:'all 0.2s'
-            }}>
-              View Products
-            </a>
-          </div>
-
-          <div style={{ display:'flex', gap:'3rem', marginTop:'4rem', paddingTop:'2rem', borderTop:'1px solid rgba(0,0,0,0.05)' }}>
-            {slides[currentSlide].stats.map(([n,l,c]) => (
-              <div key={n} style={{ textAlign:'center' }}>
-                <div style={{ color:c, fontSize:'2.5rem', fontWeight:'800', letterSpacing:'-0.025em', marginBottom:'0.25rem' }}>{n}</div>
-                <div style={{ color:'#6B7280', fontSize:'0.875rem', fontWeight:'500', textTransform:'uppercase', letterSpacing:'0.05em' }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Hero Card */}
-        <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
-          <div style={{
-            background:'rgba(255,255,255,0.95)',
-            border:'1px solid rgba(0,0,0,0.05)',
-            borderRadius:'1.5rem',
-            padding:'3rem 2.5rem',
-            backdropFilter:'blur(20px)',
-            boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)',
-            position:'relative',
-            maxWidth:'28rem',
-            width:'100%'
-          }}>
-            <div style={{ textAlign:'center', marginBottom:'2rem' }}>
-              <div style={{
-                width:'5rem',
-                height:'5rem',
-                borderRadius:'1rem',
-                background:`linear-gradient(135deg,${slides[currentSlide].accentColor},#1D4ED8)`,
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                fontSize:'2.5rem',
-                margin:'0 auto 1rem',
-                boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'
-              }}>👑</div>
-              <div style={{ color:'#1F2937', fontSize:'1.5rem', fontWeight:'800', letterSpacing:'0.025em', fontFamily:'Georgia,serif', marginBottom:'0.25rem' }}>PRINCE</div>
-              <div style={{ color: slides[currentSlide].accentColor, fontSize:'0.75rem', letterSpacing:'0.2em', fontWeight:'700', textTransform:'uppercase' }}>PIPING SYSTEMS</div>
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'1.5rem' }}>
-              {['UPVC Pipes','CPVC Systems','SWR Drainage','HDPE Pipes'].map((item,i) => (
-                <div key={item} style={{
-                  display:'flex',
-                  alignItems:'center',
-                  gap:'0.5rem',
-                  padding:'0.75rem 1rem',
-                  borderRadius:'0.5rem',
-                  background: i===0 ? 'rgba(59,130,246,0.1)' : 'rgba(0,0,0,0.02)',
-                  border:`1px solid ${i===0 ? 'rgba(59,130,246,0.2)' : 'rgba(0,0,0,0.05)'}`,
-                  transition:'all 0.2s'
-                }}>
-                  <div style={{
-                    width:'6px',
-                    height:'6px',
-                    borderRadius:'50%',
-                    background: i===0 ? slides[currentSlide].accentColor : '#D1D5DB'
-                  }} />
-                  <span style={{
-                    color: i===0 ? '#1F2937' : '#6B7280',
-                    fontSize:'0.875rem',
-                    fontWeight: i===0 ? '600' : '400'
-                  }}>{item}</span>
-                  {i===0 && <span style={{
-                    marginLeft:'auto',
-                    background:'rgba(16,185,129,0.1)',
-                    color:'#059669',
-                    padding:'0.125rem 0.5rem',
-                    borderRadius:'0.25rem',
-                    fontSize:'0.625rem',
-                    fontWeight:'600',
-                    textTransform:'uppercase',
-                    letterSpacing:'0.05em'
-                  }}>ISI Marked</span>}
+    <div className="relative">
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex">
+          {featuredProducts.map((product) => (
+            <div key={product.id} className="flex-[0_0_100%] min-w-0">
+              <div className="bg-gradient-to-br from-[#1a1a2e] via-[#2d1040] to-[#1a2a4e] rounded-3xl p-12 mx-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                  <div className="order-2 md:order-1">
+                    <div className="inline-flex items-center gap-2 bg-[rgba(204,31,31,0.15)] border border-[rgba(204,31,31,0.3)] rounded-full px-3.5 py-1.5 mb-6">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#e84040]" />
+                      <span className="text-[#ff8080] text-[0.72rem] font-semibold tracking-wider uppercase">
+                        {product.category}
+                      </span>
+                    </div>
+                    <h2 className="text-5xl font-black leading-tight mb-5 text-white tracking-tight">
+                      {product.name}
+                    </h2>
+                    <p className="text-[rgba(255,255,255,0.6)] text-lg leading-relaxed mb-8 max-w-md">
+                      {product.description}
+                    </p>
+                    <div className="flex flex-wrap gap-3 mb-8">
+                      {product.features.map((feature, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm"
+                        >
+                          ✓ {feature}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div>
+                        <div className="text-[rgba(255,255,255,0.5)] text-xs uppercase tracking-widest mb-1">
+                          Starting From
+                        </div>
+                        <div className="text-[#4de8b0] text-4xl font-black tracking-tight">
+                          ₹{product.price.toLocaleString()}
+                        </div>
+                      </div>
+                      <Link
+                        to="/login"
+                        className="bg-gradient-to-r from-[#cc1f1f] to-[#e84040] text-white px-8 py-3.5 rounded-lg font-bold text-sm shadow-lg shadow-[rgba(204,31,31,0.4)] hover:shadow-xl transition-all"
+                      >
+                        Enquire Now →
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="order-1 md:order-2 flex items-center justify-center">
+                    <div className="text-[15rem] leading-none filter drop-shadow-2xl">
+                      {product.image}
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
-
-            <div style={{
-              padding:'1rem',
-              background:'rgba(16,185,129,0.05)',
-              borderRadius:'0.5rem',
-              border:'1px solid rgba(16,185,129,0.1)',
-              textAlign:'center',
-              color:'#059669',
-              fontSize:'0.75rem',
-              fontWeight:'600',
-              textTransform:'uppercase',
-              letterSpacing:'0.1em'
-            }}>
-              Pan-India Delivery Available
-            </div>
-          </div>
-
-          {/* Floating Elements */}
-          <div style={{
-            position:'absolute',
-            top:'-2rem',
-            right:'-2rem',
-            background:'rgba(255,255,255,0.9)',
-            border:'1px solid rgba(0,0,0,0.05)',
-            borderRadius:'0.75rem',
-            padding:'1rem',
-            boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)',
-            backdropFilter:'blur(10px)',
-            zIndex:3
-          }}>
-            <div style={{ fontSize:'1.5rem', marginBottom:'0.25rem' }}>🏗️</div>
-            <div style={{ color: slides[currentSlide].accentColor, fontSize:'0.75rem', fontWeight:'600' }}>Construction</div>
-          </div>
-
-          <div style={{
-            position:'absolute',
-            bottom:'2rem',
-            left:'-2rem',
-            background:'rgba(255,255,255,0.9)',
-            border:'1px solid rgba(0,0,0,0.05)',
-            borderRadius:'0.75rem',
-            padding:'1rem',
-            boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)',
-            backdropFilter:'blur(10px)',
-            zIndex:3
-          }}>
-            <div style={{ fontSize:'1.5rem', marginBottom:'0.25rem' }}>✅</div>
-            <div style={{ color:'#059669', fontSize:'0.75rem', fontWeight:'600' }}>ISI Certified</div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Carousel Dots */}
-      <div style={{ position:'absolute', bottom:'3rem', left:'50%', transform:'translateX(-50%)', display:'flex', gap:'0.75rem', zIndex:3 }}>
-        {slides.map((_, i) => (
+      {/* Navigation Arrows */}
+      <button
+        onClick={scrollPrev}
+        className="absolute left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] border border-[rgba(255,255,255,0.2)] rounded-full flex items-center justify-center text-white backdrop-blur-md transition-all z-10"
+      >
+        ←
+      </button>
+      <button
+        onClick={scrollNext}
+        className="absolute right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] border border-[rgba(255,255,255,0.2)] rounded-full flex items-center justify-center text-white backdrop-blur-md transition-all z-10"
+      >
+        →
+      </button>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-6">
+        {featuredProducts.map((_, index) => (
           <button
-            key={i}
-            onClick={() => setCurrentSlide(i)}
-            style={{
-              width:'12px',
-              height:'12px',
-              borderRadius:'50%',
-              border:'none',
-              background: i === currentSlide ? slides[currentSlide].accentColor : 'rgba(0,0,0,0.2)',
-              cursor:'pointer',
-              transition:'all 0.3s',
-              boxShadow:'0 2px 4px rgba(0,0,0,0.1)'
-            }}
+            key={index}
+            onClick={() => emblaApi && emblaApi.scrollTo(index)}
+            className={`h-2 rounded-full transition-all ${
+              index === selectedIndex
+                ? 'w-8 bg-[#cc1f1f]'
+                : 'w-2 bg-[rgba(26,26,46,0.2)] hover:bg-[rgba(26,26,46,0.3)]'
+            }`}
           />
         ))}
       </div>
-
-      <div style={{
-        position:'absolute',
-        bottom:'1.5rem',
-        left:'50%',
-        transform:'translateX(-50%)',
-        display:'flex',
-        flexDirection:'column',
-        alignItems:'center',
-        gap:'0.5rem',
-        opacity:0.6,
-        zIndex:3
-      }}>
-        <span style={{ color:'#6B7280', fontSize:'0.875rem', fontWeight:'500' }}>Scroll to explore</span>
-        <div style={{
-          width:'1px',
-          height:'2rem',
-          background:'linear-gradient(to bottom, #6B7280, transparent)',
-          animation:'bounce 2s infinite'
-        }} />
-      </div>
     </div>
-
-    {/* ═══ ABOUT ══════════════════════════════════════════ */}
-    <div id="about" style={{ background:'#FFFFFF', padding:'6rem 0' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4rem', alignItems:'center' }}>
-          <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'2rem' }}>
-              <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#3B82F6' }} />
-              <span style={{ color:'#3B82F6', fontSize:'0.875rem', fontWeight:'600' }}>About Us</span>
-            </div>
-
-            <h2 style={{ fontSize:'clamp(2.5rem,4vw,3.5rem)', fontWeight:'800', margin:'0 0 1.5rem', lineHeight:'1.2', letterSpacing:'-0.025em', color:'#1F2937' }}>
-              Building India's <span style={{ color:'#3B82F6' }}>Infrastructure</span> For 37 Years
-            </h2>
-
-            <p style={{ color:'#6B7280', fontSize:'1.125rem', lineHeight:'1.7', marginBottom:'1.5rem', maxWidth:'32rem' }}>
-              Prince Piping Systems Pvt. Ltd. was established in 1987 with a vision to provide high-quality, durable piping solutions to India's rapidly growing construction and infrastructure sectors.
-            </p>
-
-            <p style={{ color:'#6B7280', fontSize:'1.125rem', lineHeight:'1.7', marginBottom:'2.5rem', maxWidth:'32rem' }}>
-              With state-of-the-art manufacturing facilities, stringent quality control, and a pan-India distribution network of over 5,000 active dealers, we continue to set the benchmark for piping excellence.
-            </p>
-
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'1rem', maxWidth:'24rem' }}>
-              {[
-                {title:'ISO 9001', subtitle:'Certified', icon:'🏆'},
-                {title:'ISI', subtitle:'Marked', icon:'✅'},
-                {title:'BIS', subtitle:'Approved', icon:'🛡️'}
-              ].map(({title, subtitle, icon}) => (
-                <div key={title} style={{
-                  background:'rgba(59,130,246,0.05)',
-                  border:'1px solid rgba(59,130,246,0.1)',
-                  borderRadius:'0.75rem',
-                  padding:'1.5rem 1rem',
-                  textAlign:'center',
-                  transition:'all 0.2s'
-                }}>
-                  <div style={{ fontSize:'1.5rem', marginBottom:'0.5rem' }}>{icon}</div>
-                  <div style={{ color:'#3B82F6', fontWeight:'700', fontSize:'0.875rem', marginBottom:'0.25rem' }}>{title}</div>
-                  <div style={{ color:'#6B7280', fontSize:'0.75rem', fontWeight:'500', textTransform:'uppercase', letterSpacing:'0.05em' }}>{subtitle}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-            {[
-              {number:'37+', label:'Years of Excellence', icon:'🏆', color:'#3B82F6'},
-              {number:'5000+', label:'Dealer Network', icon:'🤝', color:'#059669'},
-              {number:'500+', label:'Product SKUs', icon:'📦', color:'#DC2626'},
-              {number:'28', label:'States Covered', icon:'🗺️', color:'#D97706'}
-            ].map(({number, label, icon, color}) => (
-              <div key={number} style={{
-                background:'rgba(255,255,255,0.9)',
-                border:'1px solid rgba(0,0,0,0.05)',
-                borderRadius:'1rem',
-                padding:'2rem 1.5rem',
-                textAlign:'center',
-                backdropFilter:'blur(10px)',
-                boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)',
-                transition:'all 0.2s'
-              }}>
-                <div style={{ fontSize:'2rem', marginBottom:'0.75rem' }}>{icon}</div>
-                <div style={{ color, fontSize:'2rem', fontWeight:'800', letterSpacing:'-0.025em', marginBottom:'0.25rem' }}>{number}</div>
-                <div style={{ color:'#6B7280', fontSize:'0.875rem', fontWeight:'500' }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* ═══ SERVICES ═══════════════════════════════════════ */}
-    <div id="services" style={{ background:'#F8FAFC', padding:'6rem 0' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem' }}>
-        <div style={{ textAlign:'center', marginBottom:'4rem' }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'2rem' }}>
-            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#3B82F6' }} />
-            <span style={{ color:'#3B82F6', fontSize:'0.875rem', fontWeight:'600' }}>What We Offer</span>
-          </div>
-
-          <h2 style={{ fontSize:'clamp(2.5rem,4vw,3.5rem)', fontWeight:'800', margin:'0 0 1rem', letterSpacing:'-0.025em', color:'#1F2937' }}>Our Services</h2>
-          <p style={{ color:'#6B7280', fontSize:'1.125rem', maxWidth:'36rem', margin:'0 auto', lineHeight:'1.7' }}>
-            More than just pipes — end-to-end solutions for your construction and infrastructure needs.
-          </p>
-        </div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'2rem' }}>
-          {services.map((s,i) => (
-            <div key={i} style={{
-              background:'rgba(255,255,255,0.9)',
-              border:'1px solid rgba(0,0,0,0.05)',
-              borderRadius:'1rem',
-              padding:'2.5rem 2rem',
-              transition:'all 0.3s',
-              cursor:'default',
-              backdropFilter:'blur(10px)',
-              boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)',
-              position:'relative',
-              overflow:'hidden'
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform='translateY(-8px)';
-                e.currentTarget.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)';
-                e.currentTarget.style.borderColor='rgba(59,130,246,0.2)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform='translateY(0)';
-                e.currentTarget.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';
-                e.currentTarget.style.borderColor='rgba(0,0,0,0.05)';
-              }}
-            >
-              <div style={{
-                position:'absolute',
-                top:'-20px',
-                right:'-20px',
-                width:'80px',
-                height:'80px',
-                borderRadius:'50%',
-                background:'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.05))',
-                opacity:0.5
-              }} />
-
-              <div style={{ fontSize:'3rem', marginBottom:'1.5rem', position:'relative', zIndex:1 }}>{s.icon}</div>
-              <h3 style={{ color:'#1F2937', fontSize:'1.25rem', fontWeight:'700', margin:'0 0 1rem', position:'relative', zIndex:1 }}>{s.title}</h3>
-              <p style={{ color:'#6B7280', fontSize:'1rem', margin:0, lineHeight:'1.6', position:'relative', zIndex:1 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* ═══ PRODUCTS PREVIEW ═══════════════════════════════ */}
-    <div id="products" style={{ background:'#FFFFFF', padding:'6rem 0' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'4rem' }}>
-          <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'1.5rem' }}>
-              <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#3B82F6' }} />
-              <span style={{ color:'#3B82F6', fontSize:'0.875rem', fontWeight:'600' }}>Product Range</span>
-            </div>
-
-            <h2 style={{ fontSize:'clamp(2.5rem,4vw,3.5rem)', fontWeight:'800', margin:0, letterSpacing:'-0.025em', color:'#1F2937' }}>Featured Products</h2>
-          </div>
-          <Link to="/products" style={{
-            color:'#3B82F6',
-            textDecoration:'none',
-            fontSize:'1rem',
-            fontWeight:'600',
-            display:'inline-flex',
-            alignItems:'center',
-            gap:'0.5rem',
-            padding:'0.75rem 1.5rem',
-            border:'1px solid rgba(59,130,246,0.2)',
-            borderRadius:'0.5rem',
-            transition:'all 0.2s'
-          }}>
-            View All Products
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </Link>
-        </div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))', gap:'2rem' }}>
-          {initialProducts.slice(0,3).map(p => (
-            <div key={p.id} style={{
-              background:'rgba(255,255,255,0.9)',
-              border:'1px solid rgba(0,0,0,0.05)',
-              borderRadius:'1rem',
-              overflow:'hidden',
-              transition:'all 0.3s',
-              cursor:'pointer',
-              backdropFilter:'blur(10px)',
-              boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform='translateY(-8px)';
-                e.currentTarget.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)';
-                e.currentTarget.style.borderColor='rgba(59,130,246,0.2)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform='translateY(0)';
-                e.currentTarget.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';
-                e.currentTarget.style.borderColor='rgba(0,0,0,0.05)';
-              }}
-            >
-              <div style={{
-                height:'180px',
-                background:'linear-gradient(135deg, #F8FAFC, #E2E8F0)',
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                fontSize:'4rem',
-                position:'relative'
-              }}>
-                <div style={{
-                  position:'absolute',
-                  top:'1rem',
-                  right:'1rem',
-                  background:'rgba(59,130,246,0.1)',
-                  color:'#3B82F6',
-                  padding:'0.25rem 0.75rem',
-                  borderRadius:'1rem',
-                  fontSize:'0.75rem',
-                  fontWeight:'600',
-                  textTransform:'uppercase',
-                  letterSpacing:'0.05em'
-                }}>{p.category}</div>
-                {p.image}
-              </div>
-
-              <div style={{ padding:'2rem' }}>
-                <h3 style={{ color:'#1F2937', fontSize:'1.25rem', fontWeight:'700', margin:'0 0 0.75rem', lineHeight:'1.3' }}>{p.name}</h3>
-                <p style={{ color:'#6B7280', fontSize:'1rem', margin:'0 0 1.5rem', lineHeight:'1.6' }}>{p.description.substring(0,100)}...</p>
-
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ color:'#3B82F6', fontWeight:'800', fontSize:'1.25rem' }}>₹{p.price.toLocaleString()}</span>
-                  <Link to="/login" style={{
-                    background:'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-                    color:'#FFFFFF',
-                    padding:'0.75rem 1.5rem',
-                    borderRadius:'0.5rem',
-                    textDecoration:'none',
-                    fontWeight:'600',
-                    fontSize:'0.875rem',
-                    transition:'all 0.2s',
-                    display:'inline-flex',
-                    alignItems:'center',
-                    gap:'0.5rem'
-                  }}>
-                    Enquire Now
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* ═══ TESTIMONIALS ════════════════════════════════════ */}
-    <div id="testimonials" style={{ background:'#F8FAFC', padding:'6rem 0' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem' }}>
-        <div style={{ textAlign:'center', marginBottom:'4rem' }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'2rem' }}>
-            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#3B82F6' }} />
-            <span style={{ color:'#3B82F6', fontSize:'0.875rem', fontWeight:'600' }}>Client Stories</span>
-          </div>
-
-          <h2 style={{ fontSize:'clamp(2.5rem,4vw,3.5rem)', fontWeight:'800', margin:'0 0 1rem', letterSpacing:'-0.025em', color:'#1F2937' }}>What Our Partners Say</h2>
-          <p style={{ color:'#6B7280', fontSize:'1.125rem', maxWidth:'36rem', margin:'0 auto', lineHeight:'1.7' }}>
-            Trusted by thousands of contractors, builders, and dealers across India.
-          </p>
-        </div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(400px,1fr))', gap:'2rem' }}>
-          {testimonials.map(t => (
-            <div key={t.id} style={{
-              background:'rgba(255,255,255,0.9)',
-              border:'1px solid rgba(0,0,0,0.05)',
-              borderRadius:'1rem',
-              padding:'2.5rem',
-              backdropFilter:'blur(10px)',
-              boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)',
-              transition:'all 0.3s',
-              position:'relative'
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform='translateY(-4px)';
-                e.currentTarget.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)';
-                e.currentTarget.style.borderColor='rgba(59,130,246,0.2)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform='translateY(0)';
-                e.currentTarget.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';
-                e.currentTarget.style.borderColor='rgba(0,0,0,0.05)';
-              }}
-            >
-              <div style={{
-                position:'absolute',
-                top:'-10px',
-                left:'2rem',
-                background:'#FFFFFF',
-                borderRadius:'50%',
-                width:'60px',
-                height:'60px',
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)',
-                border:'4px solid #F8FAFC'
-              }}>
-                <span style={{ fontSize:'1.5rem' }}>💬</span>
-              </div>
-
-              <div style={{ marginBottom:'1.5rem', marginTop:'1rem' }}>
-                <Stars n={t.rating} />
-              </div>
-
-              <p style={{ color:'#374151', fontSize:'1.125rem', lineHeight:'1.7', margin:'0 0 2rem', fontStyle:'italic', position:'relative', zIndex:1 }}>
-                "{t.text}"
-              </p>
-
-              <div style={{ display:'flex', alignItems:'center', gap:'1rem' }}>
-                <div style={{
-                  width:'3rem',
-                  height:'3rem',
-                  borderRadius:'50%',
-                  background:'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-                  display:'flex',
-                  alignItems:'center',
-                  justifyContent:'center',
-                  color:'#FFFFFF',
-                  fontWeight:'700',
-                  fontSize:'1rem'
-                }}>{t.initials}</div>
-                <div>
-                  <div style={{ color:'#1F2937', fontWeight:'700', fontSize:'1rem' }}>{t.name}</div>
-                  <div style={{ color:'#6B7280', fontSize:'0.875rem' }}>{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* ═══ CONTACT ═════════════════════════════════════════ */}
-    <div id="contact" style={{ background:'#FFFFFF', padding:'6rem 0' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 2rem' }}>
-        {/* CTA */}
-        <div style={{
-          background:'linear-gradient(135deg, #F8FAFC, #E2E8F0)',
-          border:'1px solid rgba(0,0,0,0.05)',
-          borderRadius:'1.5rem',
-          padding:'4rem 3rem',
-          textAlign:'center',
-          marginBottom:'4rem',
-          position:'relative',
-          overflow:'hidden',
-          backdropFilter:'blur(10px)',
-          boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{
-            position:'absolute',
-            top:'-40px',
-            right:'-40px',
-            width:'200px',
-            height:'200px',
-            borderRadius:'50%',
-            background:'radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%)',
-            pointerEvents:'none'
-          }} />
-
-          <div style={{ display:'inline-flex', alignItems:'center', gap:'0.75rem', background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:'2rem', padding:'0.5rem 1rem', marginBottom:'2rem' }}>
-            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#3B82F6' }} />
-            <span style={{ color:'#3B82F6', fontSize:'0.875rem', fontWeight:'600' }}>Become a Partner</span>
-          </div>
-
-          <h2 style={{ color:'#1F2937', fontSize:'clamp(2.5rem,4vw,3.5rem)', fontWeight:'800', margin:'0 0 1rem', letterSpacing:'-0.025em' }}>Join Our Dealer Network</h2>
-          <p style={{ color:'#6B7280', fontSize:'1.125rem', maxWidth:'36rem', margin:'0 auto 2.5rem', lineHeight:'1.7' }}>
-            Become an authorised Prince Piping dealer and access exclusive pricing, marketing support, and a dedicated sales team.
-          </p>
-
-          <Link to="/login" style={{
-            background:'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-            color:'#FFFFFF',
-            padding:'1rem 2.5rem',
-            borderRadius:'0.75rem',
-            textDecoration:'none',
-            fontWeight:'600',
-            fontSize:'1rem',
-            boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
-            display:'inline-flex',
-            alignItems:'center',
-            gap:'0.5rem',
-            transition:'all 0.2s'
-          }}>
-            Get Started Today
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </Link>
-        </div>
-
-        {/* Contact cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))', gap:'2rem' }}>
-          {[
-            {icon:'📞', title:'Call Us', value:'+91 1800-XXX-XXXX', subtitle:'Mon–Sat, 9am–6pm IST', color:'#3B82F6'},
-            {icon:'✉️', title:'Email Us', value:'sales@princepipes.com', subtitle:'We reply within 24 hours', color:'#059669'},
-            {icon:'🏢', title:'Head Office', value:'New Delhi, India', subtitle:'Pan-India Distribution', color:'#DC2626'}
-          ].map(({icon, title, value, subtitle, color}) => (
-            <div key={title} style={{
-              background:'rgba(255,255,255,0.9)',
-              border:'1px solid rgba(0,0,0,0.05)',
-              borderRadius:'1rem',
-              padding:'2rem',
-              display:'flex',
-              alignItems:'flex-start',
-              gap:'1rem',
-              backdropFilter:'blur(10px)',
-              boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)',
-              transition:'all 0.2s'
-            }}>
-              <div style={{
-                width:'3rem',
-                height:'3rem',
-                borderRadius:'0.75rem',
-                background:`linear-gradient(135deg, ${color}, ${color}dd)`,
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                fontSize:'1.25rem',
-                flexShrink:0,
-                boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'
-              }}>{icon}</div>
-              <div>
-                <div style={{ color, fontSize:'0.875rem', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'0.5rem' }}>{title}</div>
-                <div style={{ color:'#1F2937', fontWeight:'700', fontSize:'1.125rem', marginBottom:'0.25rem' }}>{value}</div>
-                <div style={{ color:'#6B7280', fontSize:'0.875rem' }}>{subtitle}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* ═══ FOOTER ══════════════════════════════════════════ */}
-    <footer style={{ background:'#1F2937', padding:'4rem 2rem 2rem', color:'#FFFFFF' }}>
-      <div style={{ maxWidth:'1200px', margin:'0 auto' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr', gap:'3rem', marginBottom:'3rem' }}>
-          <div>
-            <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', marginBottom:'1.5rem' }}>
-              <div style={{
-                width:'2.5rem',
-                height:'2.5rem',
-                borderRadius:'0.5rem',
-                background:'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                fontSize:'1.125rem',
-                fontWeight:'900',
-                color:'#FFFFFF',
-                fontFamily:'Georgia,serif'
-              }}>P</div>
-              <div>
-                <div style={{ fontWeight:'900', fontSize:'1.125rem', letterSpacing:'0.1em', fontFamily:'Georgia,serif' }}>PRINCE</div>
-                <div style={{ color:'#3B82F6', fontSize:'0.625rem', letterSpacing:'0.2em', fontWeight:'700' }}>PIPING SYSTEMS</div>
-              </div>
-            </div>
-            <p style={{ color:'rgba(255,255,255,0.7)', fontSize:'1rem', lineHeight:'1.6', maxWidth:'20rem' }}>
-              India's most trusted piping brand since 1987. Committed to quality, innovation, and sustainable infrastructure.
-            </p>
-          </div>
-
-          {[
-            ['Products', ['UPVC Pipes', 'CPVC Pipes', 'SWR Drainage', 'Column Pipes', 'HDPE Pipes']],
-            ['Company', ['About Us', 'Certifications', 'Careers', 'News & Press', 'CSR']],
-            ['Support', ['Dealer Login', 'Technical Docs', 'Installation Guide', 'Warranty', 'Contact Us']]
-          ].map(([title, links]) => (
-            <div key={title}>
-              <h4 style={{ color:'#FFFFFF', fontSize:'0.875rem', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'1.5rem' }}>{title}</h4>
-              {links.map(link => (
-                <div key={link} style={{
-                  color:'rgba(255,255,255,0.6)',
-                  fontSize:'0.875rem',
-                  marginBottom:'0.75rem',
-                  cursor:'pointer',
-                  transition:'color 0.2s'
-                }}
-                  onMouseEnter={e => e.target.style.color = '#FFFFFF'}
-                  onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
-                >
-                  {link}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div style={{
-          borderTop:'1px solid rgba(255,255,255,0.1)',
-          paddingTop:'2rem',
-          display:'flex',
-          justifyContent:'space-between',
-          alignItems:'center',
-          flexWrap:'wrap',
-          gap:'1rem'
-        }}>
-          <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'0.875rem' }}>
-            © 2026 Prince Piping Systems Pvt. Ltd. All rights reserved.
-          </div>
-          <div style={{ display:'flex', gap:'2rem' }}>
-            {['Privacy Policy', 'Terms of Use', 'Cookie Policy'].map(link => (
-              <span key={link} style={{
-                color:'rgba(255,255,255,0.5)',
-                fontSize:'0.875rem',
-                cursor:'pointer',
-                transition:'color 0.2s'
-              }}
-                onMouseEnter={e => e.target.style.color = '#FFFFFF'}
-                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.5)'}
-              >
-                {link}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap');
-      html { scroll-behavior: smooth; }
-      * { box-sizing: border-box; }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #f0ede8; }
-      ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 3px; }
-      input::placeholder, textarea::placeholder { color: #c0bfcf; }
-      select option { background: #fff; color: #1a1a2e; }
-    `}</style>
-  </div>
-)
+  );
 };
 
-export default Home;
+// ═══════════════════════════════════════════════════════════════
+// MAIN HOME PAGE COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+const HomePage = () => {
+  return (
+    <div className="bg-[#f8f6f2] text-[#1a1a2e] font-['Outfit','Segoe_UI',sans-serif] overflow-x-hidden">
+      {/* ═══ HEADER ═══════════════════════════════════════════════════ */}
+      <header className="bg-white border-b border-[rgba(26,26,46,0.08)] sticky top-0 z-50 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-10">
+          {/* Top Bar - Logo and Name */}
+          <div className="flex items-center justify-between py-4">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#cc1f1f] to-[#e84040] flex items-center justify-center text-2xl font-black text-white font-['Georgia',serif] shadow-md">
+                P
+              </div>
+              <div>
+                <div className="text-[#1a1a2e] font-black text-base tracking-[2.5px] font-['Georgia',serif] leading-none">
+                  PRINCE
+                </div>
+                <div className="text-[#cc1f1f] text-[0.52rem] tracking-[3px] font-bold">
+                  PIPING SYSTEMS
+                </div>
+              </div>
+            </div>
+
+            {/* Center - Distributor Name */}
+            <div className="hidden md:block text-center">
+              <h1 className="text-2xl font-black text-[#1a1a2e] tracking-tight">
+                Authorized Distributor Portal
+              </h1>
+              <p className="text-xs text-[#9898b8] tracking-widest uppercase mt-1">
+                Pan-India Distribution Network
+              </p>
+            </div>
+
+            {/* Right - Dealer Login Button */}
+            <Link
+              to="/login"
+              className="bg-gradient-to-r from-[#cc1f1f] to-[#e84040] text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all"
+            >
+              Dealer Login
+            </Link>
+          </div>
+
+          {/* Navigation Bar */}
+          <nav className="border-t border-[rgba(26,26,46,0.06)]">
+            <div className="flex items-center justify-center gap-8 py-4">
+              <a
+                href="#home"
+                className="text-sm font-semibold text-[#1a1a2e] hover:text-[#cc1f1f] transition-colors"
+              >
+                Home
+              </a>
+              <a
+                href="#about"
+                className="text-sm font-semibold text-[#1a1a2e] hover:text-[#cc1f1f] transition-colors"
+              >
+                About Distributor
+              </a>
+              <a
+                href="#products"
+                className="text-sm font-semibold text-[#1a1a2e] hover:text-[#cc1f1f] transition-colors"
+              >
+                Product Categories
+              </a>
+              <a
+                href="#contact"
+                className="text-sm font-semibold text-[#1a1a2e] hover:text-[#cc1f1f] transition-colors"
+              >
+                Contact Distributor
+              </a>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      {/* ═══ HERO CAROUSEL ═══════════════════════════════════════════════ */}
+      <section id="home" className="bg-[#f8f6f2] py-16">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-12">
+            <SectionLabel text="Featured Products" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">
+              New Arrivals & <span className="text-[#cc1f1f]">Best Sellers</span>
+            </h2>
+            <p className="text-[#6b6b8d] text-lg max-w-2xl mx-auto leading-relaxed">
+              Explore our latest collection of premium piping systems and solutions
+            </p>
+          </div>
+          <ProductCarousel />
+        </div>
+      </section>
+
+      {/* ═══ ABOUT DISTRIBUTOR ═══════════════════════════════════════════ */}
+      <section id="about" className="bg-white py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+            <div>
+              <SectionLabel text="About Us" />
+              <h2 className="text-5xl font-black mb-5 leading-tight tracking-tight">
+                Building India's <span className="text-[#cc1f1f]">Infrastructure</span> For 37
+                Years
+              </h2>
+              <p className="text-[#6b6b8d] text-base leading-relaxed mb-4">
+                Prince Piping Systems Pvt. Ltd. was established in 1987 with a vision to
+                provide high-quality, durable piping solutions to India's rapidly growing
+                construction and infrastructure sectors.
+              </p>
+              <p className="text-[#9898b8] text-sm leading-relaxed mb-8">
+                With state-of-the-art manufacturing facilities, stringent quality control, and a
+                pan-India distribution network of over 5,000 active dealers, we continue to set
+                the benchmark for piping excellence.
+              </p>
+              <div className="flex gap-3.5 flex-wrap">
+                {[['ISO 9001', 'Certified'], ['ISI', 'Marked'], ['BIS', 'Approved']].map(
+                  ([t, s]) => (
+                    <div
+                      key={t}
+                      className="text-center px-4 py-3.5 bg-[#fef5f5] border border-[rgba(204,31,31,0.15)] rounded-xl"
+                    >
+                      <div className="text-[#cc1f1f] font-extrabold text-base">{t}</div>
+                      <div className="text-[#9898b8] text-[0.65rem] tracking-wider uppercase mt-0.5">
+                        {s}
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3.5">
+              {stats.map(({ number, label, icon, color }) => (
+                <div
+                  key={label}
+                  className="bg-[#f8f6f2] border border-[rgba(26,26,46,0.08)] rounded-2xl p-6 text-center hover:border-[rgba(204,31,31,0.2)] transition-all hover:shadow-lg"
+                  style={{ borderColor: `${color}22` }}
+                >
+                  <div className="text-4xl mb-2">{icon}</div>
+                  <div
+                    className="text-4xl font-black tracking-tighter mb-1"
+                    style={{ color }}
+                  >
+                    {number}
+                  </div>
+                  <div className="text-[#9898b8] text-xs">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TRUSTED BRANDS ══════════════════════════════════════════════ */}
+      <section className="bg-[#f8f6f2] py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-14">
+            <SectionLabel text="Our Partners" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">
+              Trusted <span className="text-[#cc1f1f]">Brands</span> We Distribute
+            </h2>
+            <p className="text-[#6b6b8d] text-base max-w-xl mx-auto leading-relaxed">
+              We partner with India's leading manufacturers to bring you the best quality
+              products
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+            {trustedBrands.map((brand) => (
+              <div
+                key={brand.id}
+                className="bg-white border border-[rgba(26,26,46,0.07)] rounded-2xl p-8 text-center hover:border-[rgba(204,31,31,0.25)] hover:shadow-xl hover:-translate-y-1 transition-all cursor-default"
+              >
+                <div className="text-6xl mb-4">{brand.logo}</div>
+                <h3
+                  className="text-xl font-black mb-2 tracking-tight"
+                  style={{ color: brand.color }}
+                >
+                  {brand.name}
+                </h3>
+                <p className="text-[#9898b8] text-xs leading-relaxed">{brand.tagline}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SERVICES ═════════════════════════════════════════════════════ */}
+      <section className="bg-white py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-14">
+            <SectionLabel text="What We Offer" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">Our Services</h2>
+            <p className="text-[#6b6b8d] text-base max-w-xl mx-auto leading-relaxed">
+              More than just pipes — end-to-end solutions for your construction needs
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            {services.map((s, i) => (
+              <div
+                key={i}
+                className="bg-[#f8f6f2] border border-[rgba(26,26,46,0.07)] rounded-2xl p-8 hover:border-[rgba(204,31,31,0.3)] hover:-translate-y-1 hover:shadow-lg transition-all cursor-default"
+              >
+                <div className="text-5xl mb-3.5">{s.icon}</div>
+                <h3 className="text-[#1a1a2e] text-base font-bold mb-2.5">{s.title}</h3>
+                <p className="text-[#6b6b8d] text-[0.83rem] leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PRODUCT CATEGORIES ══════════════════════════════════════════ */}
+      <section id="products" className="bg-[#f8f6f2] py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-14">
+            <SectionLabel text="Product Range" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">
+              Product <span className="text-[#cc1f1f]">Categories</span>
+            </h2>
+            <p className="text-[#6b6b8d] text-base max-w-xl mx-auto leading-relaxed">
+              Comprehensive range of materials for all your construction needs
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-16">
+            {productCategories.map((cat) => (
+              <div
+                key={cat.id}
+                className="bg-white border border-[rgba(26,26,46,0.07)] rounded-2xl p-8 text-center hover:border-[rgba(204,31,31,0.3)] hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer"
+              >
+                <div className="text-6xl mb-4">{cat.icon}</div>
+                <h3 className="text-[#1a1a2e] text-lg font-bold mb-2">{cat.name}</h3>
+                <p className="text-[#9898b8] text-sm leading-relaxed">{cat.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Featured Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {initialProducts.map((p) => (
+              <div
+                key={p.id}
+                className="bg-white border border-[rgba(26,26,46,0.07)] rounded-2xl overflow-hidden hover:border-[rgba(204,31,31,0.25)] hover:-translate-y-1 hover:shadow-lg transition-all cursor-default"
+              >
+                <div className="h-32 bg-gradient-to-br from-[#fef0f0] to-[#f0f0ff] flex items-center justify-center text-6xl">
+                  {p.image}
+                </div>
+                <div className="p-5">
+                  <div className="text-[#cc1f1f] text-[0.63rem] font-bold tracking-widest uppercase mb-1.5">
+                    {p.category}
+                  </div>
+                  <h3 className="text-[#1a1a2e] text-base font-bold mb-2">{p.name}</h3>
+                  <p className="text-[#6b6b8d] text-[0.82rem] mb-3.5 leading-relaxed">
+                    {p.description.substring(0, 80)}...
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#cc1f1f] font-extrabold text-lg">
+                      ₹{p.price.toLocaleString()}
+                    </span>
+                    <Link
+                      to="/login"
+                      className="text-[#9898b8] hover:text-[#cc1f1f] text-xs font-semibold transition-colors"
+                    >
+                      Enquire →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TESTIMONIALS ═════════════════════════════════════════════════ */}
+      <section className="bg-white py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-14">
+            <SectionLabel text="Client Stories" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">
+              What Our <span className="text-[#cc1f1f]">Partners</span> Say
+            </h2>
+            <p className="text-[#6b6b8d] text-base max-w-xl mx-auto leading-relaxed">
+              Trusted by thousands of contractors, builders, and dealers across India
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {testimonials.map((t) => (
+              <div
+                key={t.id}
+                className="bg-[#f8f6f2] border border-[rgba(26,26,46,0.07)] rounded-2xl p-7 hover:border-[rgba(204,31,31,0.2)] hover:shadow-lg transition-all"
+              >
+                <div className="mb-3.5">
+                  <Stars n={t.rating} />
+                </div>
+                <p className="text-[#4a4a6a] text-sm leading-relaxed mb-5 italic">
+                  "{t.text}"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#cc1f1f] to-[#e84040] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    {t.initials}
+                  </div>
+                  <div>
+                    <div className="text-[#1a1a2e] font-bold text-sm">{t.name}</div>
+                    <div className="text-[#9898b8] text-xs">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CTA / GET STARTED ════════════════════════════════════════════ */}
+      <section className="bg-[#f8f6f2] py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="bg-gradient-to-br from-[#1a1a2e] via-[#2d1040] to-[#1a2a4e] rounded-3xl p-16 text-center relative overflow-hidden">
+            {/* Decorative glow */}
+            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[radial-gradient(circle,rgba(204,31,31,0.2),transparent_70%)] pointer-events-none" />
+            
+            <SectionLabel text="Become a Partner" />
+            <h2 className="text-white text-5xl font-black mb-3.5 tracking-tight">
+              Join Our Dealer Network
+            </h2>
+            <p className="text-[rgba(255,255,255,0.5)] text-base max-w-xl mx-auto mb-8 leading-relaxed">
+              Become an authorised Prince Piping dealer and access exclusive pricing, marketing
+              support, and a dedicated sales team.
+            </p>
+            <Link
+              to="/login"
+              className="inline-block bg-gradient-to-r from-[#cc1f1f] to-[#e84040] text-white px-11 py-4 rounded-lg font-extrabold text-sm shadow-xl shadow-[rgba(204,31,31,0.45)] hover:shadow-2xl transition-all"
+            >
+              Get Started →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CONTACT ══════════════════════════════════════════════════════ */}
+      <section id="contact" className="bg-white py-24">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="text-center mb-14">
+            <SectionLabel text="Get In Touch" />
+            <h2 className="text-5xl font-black mb-4 tracking-tight">
+              Contact <span className="text-[#cc1f1f]">Distributor</span>
+            </h2>
+            <p className="text-[#6b6b8d] text-base max-w-xl mx-auto leading-relaxed">
+              We're here to help. Reach out to us through any of these channels
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5">
+            {[
+              {
+                icon: '📞',
+                t: 'Call Us',
+                v: contactInfo.phone,
+                s: contactInfo.hours,
+                c: '#0d9f6e',
+                bg: '#e6f9f3'
+              },
+              {
+                icon: '✉️',
+                t: 'Email Us',
+                v: contactInfo.email,
+                s: 'We reply within 24 hours',
+                c: '#1a6dc8',
+                bg: '#e8f2fe'
+              },
+              {
+                icon: '💬',
+                t: 'WhatsApp Chat',
+                v: contactInfo.whatsapp,
+                s: 'Quick response guaranteed',
+                c: '#25d366',
+                bg: '#e6f9ed'
+              }
+            ].map(({ icon, t, v, s, c, bg }) => (
+              <div
+                key={t}
+                className="rounded-2xl p-6 flex items-start gap-3.5 border transition-all hover:shadow-lg"
+                style={{ background: bg, borderColor: `${c}22` }}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
+                >
+                  {icon}
+                </div>
+                <div>
+                  <div
+                    className="text-[0.68rem] tracking-widest uppercase font-bold mb-1"
+                    style={{ color: `${c}cc` }}
+                  >
+                    {t}
+                  </div>
+                  <div className="text-[#1a1a2e] font-bold text-sm mb-0.5">{v}</div>
+                  <div className="text-[#9898b8] text-xs">{s}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <div className="bg-[#f8f6f2] border border-[rgba(26,26,46,0.07)] rounded-2xl p-6">
+              <div className="text-2xl mb-2">🏢</div>
+              <div className="text-[#1a1a2e] font-bold text-base mb-1">Head Office</div>
+              <div className="text-[#6b6b8d] text-sm">{contactInfo.address}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER ═══════════════════════════════════════════════════════ */}
+      <footer className="bg-[#1a1a2e] py-16">
+        <div className="max-w-[1400px] mx-auto px-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-14 mb-12">
+            <div>
+              <div className="flex items-center gap-2.5 mb-4.5">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#cc1f1f] to-[#e84040] flex items-center justify-center text-lg font-black text-white font-['Georgia',serif]">
+                  P
+                </div>
+                <div>
+                  <div className="text-white font-black text-sm tracking-[2.5px] font-['Georgia',serif] leading-none">
+                    PRINCE
+                  </div>
+                  <div className="text-[#cc1f1f] text-[0.52rem] tracking-[3px] font-bold">
+                    PIPING SYSTEMS
+                  </div>
+                </div>
+              </div>
+              <p className="text-[rgba(255,255,255,0.4)] text-[0.83rem] leading-relaxed max-w-xs">
+                India's most trusted piping brand since 1987. Committed to quality, innovation,
+                and sustainable infrastructure.
+              </p>
+            </div>
+            {[
+              [
+                'Products',
+                ['UPVC Pipes', 'CPVC Pipes', 'SWR Drainage', 'Column Pipes', 'HDPE Pipes']
+              ],
+              ['Company', ['About Us', 'Certifications', 'Careers', 'News & Press', 'CSR']],
+              [
+                'Support',
+                ['Dealer Login', 'Technical Docs', 'Installation Guide', 'Warranty', 'Contact Us']
+              ]
+            ].map(([title, links]) => (
+              <div key={title}>
+                <h4 className="text-white text-xs tracking-widest uppercase font-bold mb-4.5">
+                  {title}
+                </h4>
+                {links.map((l) => (
+                  <div
+                    key={l}
+                    className="text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.8)] text-[0.82rem] mb-2 cursor-pointer transition-colors"
+                  >
+                    {l}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6.5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-[rgba(255,255,255,0.25)] text-xs">
+              © 2026 Prince Piping Systems Pvt. Ltd. All rights reserved.
+            </div>
+            <div className="flex gap-4.5">
+              {['Privacy Policy', 'Terms of Use', 'Cookie Policy'].map((l) => (
+                <span
+                  key={l}
+                  className="text-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.65)] text-xs cursor-pointer transition-colors"
+                >
+                  {l}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* ═══ GLOBAL STYLES ════════════════════════════════════════════════ */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap');
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f0ede8; }
+        ::-webkit-scrollbar-thumb { background: #cc1f1f; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e84040; }
+      `}</style>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// APP WRAPPER WITH ROUTER
+// ═══════════════════════════════════════════════════════════════
+
+export default HomePage;
